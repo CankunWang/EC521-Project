@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Proposal/Experimental evaluation of multiple defenses against XSS.md",
+                "file": "Proposal/Experimental_evaluation_of_multiple_defenses_against_XSS.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Experimental evaluation of multiple defenses against XSS"
+              "title": "Experimental_evaluation_of_multiple_defenses_against_XSS"
             }
           }
         ]
@@ -196,7 +196,7 @@
   },
   "active": "7b0ba11925702e2b",
   "lastOpenFiles": [
-    "Proposal/Experimental evaluation of multiple defenses against XSS.md",
+    "Proposal/Experimental_evaluation_of_multiple_defenses_against_XSS.md",
     "README.md",
     "Proposal"
   ]
