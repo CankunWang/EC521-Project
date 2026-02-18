@@ -30,3 +30,8 @@
 	same origin policy
 	Cookie secure
 ## 5. Methodology
+#### 5.1 Attack categories
+	Reflected XSS
+	Stored XSS
+	DOM-based XSS
+#### 5.2 Evaluation metrics
