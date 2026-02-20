@@ -10,8 +10,8 @@
 ###### 1.2.4 Which defenses only minimize the effectiveness of XSS?
 ###### 1.2.5 Is there are trade off?
 ## 3. Objectives
-3.1 Build a web environment with docker that can be used to test for different configuration and XSSpayload
-3.2 Achieved multi layer XSS defenses
+3.1 Build a dockerized web environment that can be used to test for different configuration and XSS payload
+3.2 Achieved multi layer XSS defenses in dockerized web environment
 3.3 Test for Non-persistent, persistent and DOM XSS payload
 3.4 Measure the effectiveness of different defenses combination
 ## 4. System Design
@@ -35,3 +35,10 @@
 	Stored XSS
 	DOM-based XSS
 #### 5.2 Evaluation metrics
+	Success rate
+	Script execution success
+	effectiveness(data exfiltration)
+	blocking rate
+	Defense complexity
+
+## 6. Team members
