@@ -42,3 +42,7 @@
 	Defense complexity
 
 ## 6. Team members
+	Cankun Wang
+	Krista Smith
+	Thinh Phuc Nguyen
+	Fuyang Chen
