@@ -5,6 +5,7 @@ A Docker-based web lab for evaluating reflected, stored, and DOM XSS attacks und
 ## What this lab provides
 
 - A visual dashboard UI (`/`) for running XSS experiments
+- Clear per-test execution results (`XSS Executed` vs `Blocked / Neutralized`)
 - Docker-controlled defense switches (by **level** or by **layer**)
 - Repeatable startup for security testing and comparison
 
@@ -35,10 +36,10 @@ docker compose -f docker-compose.yml -f levels/level3.yml up --build
 Level meaning:
 
 - Level 0: baseline (no added defenses)
-- Level 1: input/output encoding + allowlist
-- Level 2: Level 1 + CSP/basic + DOM defense
-- Level 3: Level 2 + stricter CSP (nonce) + cookie protections
-- Level 4: Level 3 + Trusted Types + security headers baseline
+- Level 1: input/output protections (escaping, allowlist, context encoding, template auto-escape, DOM sanitization)
+- Level 2: Level 1 + browser enforcement (CSP, DOM API restriction, cross-origin isolation)
+- Level 3: Level 2 + strict CSP (`strict-dynamic`) + session protections (cookie flags + origin check)
+- Level 4: Level 3 + architectural controls (Trusted Types, avoid `innerHTML`, security headers baseline)
 
 ### 3. Run by layer combination
 
@@ -62,21 +63,16 @@ cd D:\EC521-Project\docker
 docker compose down
 ```
 
-### 5. Rebuild from scratch (optional)
-
-```powershell
-cd D:\EC521-Project\docker
-docker compose down
-docker compose build --no-cache
-docker compose up
-```
-
 ## Runtime controls
 
 Primary runtime variables are in `docker/.env`:
 
 - `DEFENSE_LEVEL` (0-4)
 - `LAYER1_ENABLED` / `LAYER2_ENABLED` / `LAYER3_ENABLED` / `LAYER4_ENABLED`
+- Layer 1 detail switches: `ENABLE_ESCAPE`, `ENABLE_ALLOWLIST`, `ENABLE_CONTEXT_ENCODING`, `ENABLE_TEMPLATE_AUTO_ESCAPE`, `ENABLE_DOM_SANITIZER`
+- Layer 2 detail switches: `ENABLE_CSP`, `CSP_MODE`, `ENABLE_DOM_DEFENSE`, `ENABLE_TRUSTED_TYPES`, `ENABLE_CROSS_ORIGIN_ISOLATION`
+- Layer 3 detail switches: `ENABLE_ORIGIN_CHECK`, `COOKIE_HTTPONLY`, `COOKIE_SECURE`, `COOKIE_SAMESITE`
+- Layer 4 detail switches: `ENABLE_AVOID_INNERHTML`, `ENABLE_SECURITY_HEADERS`
 
 If layer variables are empty, level defaults are used. If layer variables are set to `1`/`0`, they override the level behavior for that layer.
 
@@ -87,7 +83,7 @@ If layer variables are empty, level defaults are used. If layer variables are se
 - `/stored` stored XSS route
 - `/dom` DOM XSS route
 - `/api/config` active defense configuration
-- `/api/comments` stored comment state
+- `/api/comments` stored comment state (`GET`) and reset (`DELETE`)
 - `/api/login` set demo session cookie
 - `/api/me` read current session value
 

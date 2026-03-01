@@ -30,20 +30,6 @@ function readString(name, fallback) {
   return hasValue(raw) ? String(raw).trim() : fallback;
 }
 
-function escapeHtml(s) {
-  return String(s)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
-}
-
-function allowlistText(s) {
-  const t = String(s || "");
-  return t.replaceAll(/[^a-zA-Z0-9 _.,;:!?\-@()]/g, "");
-}
-
 function clampLevel(v) {
   if (!Number.isFinite(v)) return 0;
   if (v < 0) return 0;
@@ -53,7 +39,7 @@ function clampLevel(v) {
 
 function normalizeCspMode(v) {
   const mode = String(v || "basic").toLowerCase();
-  if (mode === "basic" || mode === "nonce" || mode === "unsafe-inline") {
+  if (mode === "basic" || mode === "nonce" || mode === "unsafe-inline" || mode === "strict-dynamic") {
     return mode;
   }
   return "basic";
@@ -66,60 +52,123 @@ function normalizeSameSite(v, fallback) {
   return "Lax";
 }
 
+function escapeHtml(s) {
+  return String(s)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function escapeAttr(s) {
+  return escapeHtml(String(s)).replaceAll("`", "&#96;");
+}
+
+function escapeJsString(s) {
+  return String(s)
+    .replaceAll("\\", "\\\\")
+    .replaceAll("\n", "\\n")
+    .replaceAll("\r", "\\r")
+    .replaceAll("\u2028", "")
+    .replaceAll("\u2029", "")
+    .replaceAll("\"", "\\\"")
+    .replaceAll("'", "\\'");
+}
+
+function sanitizeUrl(s) {
+  const raw = String(s || "").trim();
+  if (!raw) return "#";
+  if (/^javascript:/i.test(raw)) return "#";
+  if (/^data:/i.test(raw)) return "#";
+  return raw;
+}
+
+function allowlistText(s) {
+  const t = String(s || "");
+  return t.replaceAll(/[^a-zA-Z0-9 _.,;:!?\-@()/#=&]/g, "");
+}
+
+function sanitizeHtmlFragment(input) {
+  let s = String(input || "");
+  s = s.replaceAll(/<\s*script[^>]*>[\s\S]*?<\s*\/\s*script\s*>/gi, "");
+  s = s.replaceAll(/on[a-z]+\s*=\s*(['"]).*?\1/gi, "");
+  s = s.replaceAll(/on[a-z]+\s*=\s*[^\s>]+/gi, "");
+  s = s.replaceAll(/javascript:/gi, "blocked:");
+  return s;
+}
+
 function buildDefenseConfig() {
   const level = clampLevel(Number(readString("DEFENSE_LEVEL", "0")));
 
   const defaults = {
     enableEscape: false,
     enableAllowlist: false,
+    enableContextEncoding: false,
+    enableTemplateAutoEscape: false,
+    enableDomSanitizer: false,
     enableTextRender: false,
+
     enableCsp: false,
     cspMode: "basic",
     enableDomDefense: false,
     enableTrustedTypes: false,
-    enableSecurityHeaders: false,
+    enableCrossOriginIsolation: false,
+
     cookieHttpOnly: false,
     cookieSecure: false,
     cookieSameSite: "Lax",
+    enableOriginCheck: false,
+
+    enableAvoidInnerHtml: false,
+    enableSecurityHeaders: false,
   };
 
   if (level >= 1) {
     defaults.enableEscape = true;
     defaults.enableAllowlist = true;
+    defaults.enableContextEncoding = true;
+    defaults.enableTemplateAutoEscape = true;
+    defaults.enableDomSanitizer = true;
   }
 
   if (level >= 2) {
     defaults.enableCsp = true;
     defaults.cspMode = "basic";
     defaults.enableDomDefense = true;
+    defaults.enableCrossOriginIsolation = true;
   }
 
   if (level >= 3) {
     defaults.enableCsp = true;
-    defaults.cspMode = "nonce";
+    defaults.cspMode = "strict-dynamic";
     defaults.cookieHttpOnly = true;
     defaults.cookieSecure = true;
     defaults.cookieSameSite = "Strict";
+    defaults.enableOriginCheck = true;
   }
 
   if (level >= 4) {
-    defaults.enableCsp = true;
-    defaults.cspMode = "nonce";
-    defaults.enableDomDefense = true;
     defaults.enableTrustedTypes = true;
+    defaults.enableAvoidInnerHtml = true;
     defaults.enableSecurityHeaders = true;
+    defaults.enableDomDefense = true;
   }
 
   if (hasValue(process.env.LAYER1_ENABLED)) {
     const on = b(process.env.LAYER1_ENABLED);
     defaults.enableEscape = on;
     defaults.enableAllowlist = on;
+    defaults.enableContextEncoding = on;
+    defaults.enableTemplateAutoEscape = on;
+    defaults.enableDomSanitizer = on;
   }
 
   if (hasValue(process.env.LAYER2_ENABLED)) {
     const on = b(process.env.LAYER2_ENABLED);
     defaults.enableCsp = on;
     defaults.enableDomDefense = on;
+    defaults.enableCrossOriginIsolation = on;
     if (on && level < 3) {
       defaults.cspMode = "basic";
     }
@@ -130,45 +179,55 @@ function buildDefenseConfig() {
     defaults.cookieHttpOnly = on;
     defaults.cookieSecure = on;
     defaults.cookieSameSite = on ? "Strict" : "Lax";
+    defaults.enableOriginCheck = on;
   }
 
   if (hasValue(process.env.LAYER4_ENABLED)) {
     const on = b(process.env.LAYER4_ENABLED);
     defaults.enableTrustedTypes = on;
+    defaults.enableAvoidInnerHtml = on;
     defaults.enableSecurityHeaders = on;
     if (on) {
       defaults.enableDomDefense = true;
       defaults.enableCsp = true;
-      defaults.cspMode = "nonce";
+      defaults.cspMode = "strict-dynamic";
     }
   }
 
-  const config = {
+  return {
     level,
+
     enableEscape: readBool("ENABLE_ESCAPE", defaults.enableEscape),
     enableAllowlist: readBool("ENABLE_ALLOWLIST", defaults.enableAllowlist),
+    enableContextEncoding: readBool("ENABLE_CONTEXT_ENCODING", defaults.enableContextEncoding),
+    enableTemplateAutoEscape: readBool("ENABLE_TEMPLATE_AUTO_ESCAPE", defaults.enableTemplateAutoEscape),
+    enableDomSanitizer: readBool("ENABLE_DOM_SANITIZER", defaults.enableDomSanitizer),
     enableTextRender: readBool("ENABLE_TEXT_RENDER", defaults.enableTextRender),
+
     enableCsp: readBool("ENABLE_CSP", defaults.enableCsp),
     cspMode: normalizeCspMode(readString("CSP_MODE", defaults.cspMode)),
     enableDomDefense: readBool("ENABLE_DOM_DEFENSE", defaults.enableDomDefense),
     enableTrustedTypes: readBool("ENABLE_TRUSTED_TYPES", defaults.enableTrustedTypes),
-    enableSecurityHeaders: readBool("ENABLE_SECURITY_HEADERS", defaults.enableSecurityHeaders),
+    enableCrossOriginIsolation: readBool("ENABLE_CROSS_ORIGIN_ISOLATION", defaults.enableCrossOriginIsolation),
+
     cookieHttpOnly: readBool("COOKIE_HTTPONLY", defaults.cookieHttpOnly),
     cookieSecure: readBool("COOKIE_SECURE", defaults.cookieSecure),
     cookieSameSite: normalizeSameSite(readString("COOKIE_SAMESITE", defaults.cookieSameSite), defaults.cookieSameSite),
-  };
+    enableOriginCheck: readBool("ENABLE_ORIGIN_CHECK", defaults.enableOriginCheck),
 
-  return config;
+    enableAvoidInnerHtml: readBool("ENABLE_AVOID_INNERHTML", defaults.enableAvoidInnerHtml),
+    enableSecurityHeaders: readBool("ENABLE_SECURITY_HEADERS", defaults.enableSecurityHeaders),
+  };
 }
 
 const defense = buildDefenseConfig();
 
 function activeLayers(cfg) {
   return {
-    layer1: cfg.enableEscape || cfg.enableAllowlist,
-    layer2: cfg.enableCsp || cfg.enableDomDefense || cfg.enableTrustedTypes,
-    layer3: cfg.cookieHttpOnly || cfg.cookieSecure || cfg.cookieSameSite !== "Lax",
-    layer4: cfg.enableSecurityHeaders || cfg.enableTrustedTypes,
+    layer1: cfg.enableEscape || cfg.enableAllowlist || cfg.enableContextEncoding || cfg.enableTemplateAutoEscape || cfg.enableDomSanitizer,
+    layer2: cfg.enableCsp || cfg.enableDomDefense || cfg.enableTrustedTypes || cfg.enableCrossOriginIsolation,
+    layer3: cfg.cookieHttpOnly || cfg.cookieSecure || cfg.cookieSameSite !== "Lax" || cfg.enableOriginCheck,
+    layer4: cfg.enableAvoidInnerHtml || cfg.enableSecurityHeaders || cfg.enableTrustedTypes,
   };
 }
 
@@ -187,11 +246,17 @@ function buildCsp(nonce) {
 
   if (defense.cspMode === "nonce") {
     scriptSrc = `'self' 'nonce-${nonce}'`;
+  } else if (defense.cspMode === "strict-dynamic") {
+    scriptSrc = `'nonce-${nonce}' 'strict-dynamic'`;
   } else if (defense.cspMode === "unsafe-inline") {
     scriptSrc = "'self' 'unsafe-inline'";
   }
 
   let csp = `default-src 'self'; script-src ${scriptSrc}; object-src 'none'; base-uri 'none'; frame-ancestors 'self'`;
+
+  if (defense.cspMode === "strict-dynamic") {
+    csp += "; script-src-attr 'none'";
+  }
 
   if (defense.enableTrustedTypes) {
     csp += "; require-trusted-types-for 'script'; trusted-types xss-lab-policy";
@@ -200,20 +265,82 @@ function buildCsp(nonce) {
   return csp;
 }
 
+function nonceAttr(res) {
+  return res.locals.nonce ? ` nonce="${res.locals.nonce}"` : "";
+}
+
+function processInput(raw) {
+  let value = String(raw || "");
+
+  if (defense.enableAllowlist) {
+    value = allowlistText(value);
+  }
+
+  if (defense.enableDomSanitizer) {
+    value = sanitizeHtmlFragment(value);
+  }
+
+  return value;
+}
+
+function renderForHtml(raw) {
+  if (defense.enableEscape || defense.enableTemplateAutoEscape || defense.enableContextEncoding) {
+    return escapeHtml(raw);
+  }
+  return String(raw);
+}
+
+function renderTestPage(res, options) {
+  const route = options.route;
+  const title = options.title;
+  const bodyInner = options.bodyInner;
+  const extraScripts = options.extraScripts || [];
+  const attr = nonceAttr(res);
+
+  const probeScript = `<script${attr} src="/static/probe.js"></script>`;
+  const extraScriptHtml = extraScripts.join("\n    ");
+
+  res.type("html").send(`
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>${escapeHtml(title)}</title>
+    ${probeScript}
+  </head>
+  <body data-lab-route="${escapeAttr(route)}">
+    ${bodyInner}
+    ${extraScriptHtml}
+  </body>
+</html>
+  `);
+}
+
 app.use((req, res, next) => {
   if (!defense.enableSecurityHeaders) return next();
 
   res.setHeader("X-Content-Type-Options", "nosniff");
   res.setHeader("X-Frame-Options", "SAMEORIGIN");
   res.setHeader("Referrer-Policy", "no-referrer");
+  res.setHeader("Permissions-Policy", "geolocation=(), camera=(), microphone=()");
+  next();
+});
+
+app.use((req, res, next) => {
+  if (!defense.enableCrossOriginIsolation) return next();
+
   res.setHeader("Cross-Origin-Opener-Policy", "same-origin");
+  res.setHeader("Cross-Origin-Embedder-Policy", "require-corp");
+  res.setHeader("Cross-Origin-Resource-Policy", "same-origin");
+  res.setHeader("Origin-Agent-Cluster", "?1");
   next();
 });
 
 app.use((req, res, next) => {
   if (!defense.enableCsp) return next();
 
-  if (defense.cspMode === "nonce") {
+  if (defense.cspMode === "nonce" || defense.cspMode === "strict-dynamic") {
     const nonce = crypto.randomBytes(16).toString("base64");
     res.locals.nonce = nonce;
     res.setHeader("Content-Security-Policy", buildCsp(nonce));
@@ -224,9 +351,27 @@ app.use((req, res, next) => {
   next();
 });
 
+app.use((req, res, next) => {
+  if (!defense.enableOriginCheck) return next();
+  if (req.method === "GET" || req.method === "HEAD" || req.method === "OPTIONS") return next();
+
+  const expectedOrigin = `${req.protocol}://${req.get("host")}`;
+  const origin = req.get("origin");
+  const referer = req.get("referer");
+
+  if (origin && origin !== expectedOrigin) {
+    return res.status(403).json({ error: "origin_blocked", expectedOrigin, origin });
+  }
+
+  if (!origin && referer && !referer.startsWith(expectedOrigin)) {
+    return res.status(403).json({ error: "referer_blocked", expectedOrigin, referer });
+  }
+
+  return next();
+});
+
 app.get("/", (req, res) => {
-  const nonce = res.locals.nonce;
-  const nonceAttr = nonce ? ` nonce="${nonce}"` : "";
+  const attr = nonceAttr(res);
 
   res.type("html").send(`
 <!doctype html>
@@ -242,7 +387,7 @@ app.get("/", (req, res) => {
       <header class="hero">
         <p class="hero-kicker">Dockerized Security Playground</p>
         <h1>XSS Defense Lab Dashboard</h1>
-        <p>Proposal-based layered defense simulation with switch-driven controls.</p>
+        <p>Layered defense simulation with visual pass/fail indicators for each payload test.</p>
       </header>
 
       <section class="panel panel-config">
@@ -258,19 +403,27 @@ app.get("/", (req, res) => {
           <h3>Reflected XSS</h3>
           <form id="reflect-form" class="stack-form">
             <label>Payload</label>
-            <input id="reflect-input" value="<img src=x onerror=alert(1)>" />
+            <input id="reflect-input" value="<img src=x onerror=alert('reflect-xss')>" />
             <button type="submit">Run Reflect Test</button>
           </form>
+          <div id="reflect-result" class="result-card state-wait">
+            <strong>Waiting</strong>
+            <span>Run a payload to evaluate reflected execution.</span>
+          </div>
           <iframe id="reflect-frame" class="lab-frame" title="Reflect preview"></iframe>
         </article>
 
         <article class="panel">
           <h3>Stored XSS</h3>
           <form id="stored-form" class="stack-form">
-            <label>Comment</label>
-            <input id="stored-input" value="<script>alert(1)</script>" />
-            <button type="submit">Submit Comment</button>
+            <label>Comment Payload</label>
+            <input id="stored-input" value="<script>alert('stored-xss')</script>" />
+            <button type="submit">Run Stored Test</button>
           </form>
+          <div id="stored-result" class="result-card state-wait">
+            <strong>Waiting</strong>
+            <span>Run a payload to evaluate stored execution.</span>
+          </div>
           <div id="stored-meta" class="meta"></div>
           <iframe id="stored-frame" class="lab-frame" title="Stored preview"></iframe>
         </article>
@@ -281,9 +434,13 @@ app.get("/", (req, res) => {
           <h3>DOM XSS</h3>
           <form id="dom-form" class="stack-form">
             <label>Payload</label>
-            <input id="dom-input" value="<img src=x onerror=alert(1)>" />
+            <input id="dom-input" value="<img src=x onerror=alert('dom-xss')>" />
             <button type="submit">Run DOM Test</button>
           </form>
+          <div id="dom-result" class="result-card state-wait">
+            <strong>Waiting</strong>
+            <span>Run a payload to evaluate DOM execution.</span>
+          </div>
           <iframe id="dom-frame" class="lab-frame" title="DOM preview"></iframe>
         </article>
 
@@ -298,7 +455,7 @@ app.get("/", (req, res) => {
       </section>
     </main>
 
-    <script${nonceAttr} src="/static/lab.js"></script>
+    <script${attr} src="/static/lab.js"></script>
   </body>
 </html>
   `);
@@ -311,21 +468,35 @@ app.get("/api/config", (req, res) => {
     defenses: {
       enableEscape: defense.enableEscape,
       enableAllowlist: defense.enableAllowlist,
+      enableContextEncoding: defense.enableContextEncoding,
+      enableTemplateAutoEscape: defense.enableTemplateAutoEscape,
+      enableDomSanitizer: defense.enableDomSanitizer,
       enableTextRender: defense.enableTextRender,
+
       enableCsp: defense.enableCsp,
       cspMode: defense.cspMode,
       enableDomDefense: defense.enableDomDefense,
       enableTrustedTypes: defense.enableTrustedTypes,
-      enableSecurityHeaders: defense.enableSecurityHeaders,
+      enableCrossOriginIsolation: defense.enableCrossOriginIsolation,
+
       cookieHttpOnly: defense.cookieHttpOnly,
       cookieSecure: defense.cookieSecure,
       cookieSameSite: defense.cookieSameSite,
+      enableOriginCheck: defense.enableOriginCheck,
+
+      enableAvoidInnerHtml: defense.enableAvoidInnerHtml,
+      enableSecurityHeaders: defense.enableSecurityHeaders,
     },
   });
 });
 
 app.get("/api/comments", (req, res) => {
   res.json({ count: comments.length, comments });
+});
+
+app.delete("/api/comments", (req, res) => {
+  comments.length = 0;
+  res.json({ ok: true, count: 0 });
 });
 
 app.post("/api/login", (req, res) => {
@@ -355,28 +526,42 @@ app.get("/me", (req, res) => {
 });
 
 app.get("/reflect", (req, res) => {
-  let q = req.query.q || "";
-
-  if (defense.enableAllowlist) q = allowlistText(q);
-  const out = defense.enableEscape ? escapeHtml(q) : String(q);
+  const source = processInput(req.query.q || "");
+  const htmlOut = renderForHtml(source);
+  const attrOut = defense.enableContextEncoding ? escapeAttr(source) : source;
+  const jsOut = defense.enableContextEncoding ? escapeJsString(source) : source;
+  const safeUrl = defense.enableContextEncoding ? sanitizeUrl(source) : source;
 
   if (defense.enableTextRender) {
-    res.type("text/plain").send(out);
+    res.type("text/plain").send(htmlOut);
     return;
   }
 
-  res.type("html").send(`
-    <h3>/reflect</h3>
-    <p>Query:</p>
-    <div id="out">${out}</div>
-    <p><a href="/" target="_top">Back to lab</a></p>
-  `);
+  renderTestPage(res, {
+    route: "reflect",
+    title: "Reflect",
+    bodyInner: `
+<h3>/reflect</h3>
+<p>Query:</p>
+<div id="out">${htmlOut}</div>
+<hr />
+<p><strong>Context Output Preview</strong></p>
+<ul>
+  <li>HTML: <code>${escapeHtml(htmlOut)}</code></li>
+  <li>Attribute: <code>${escapeHtml(attrOut)}</code></li>
+  <li>JS string: <code>${escapeHtml(jsOut)}</code></li>
+  <li>URL: <code>${escapeHtml(safeUrl)}</code></li>
+</ul>
+<p><a href="/" target="_top">Back to lab</a></p>
+`,
+  });
 });
 
 app.get("/stored", (req, res) => {
   const items = comments
     .map((c) => {
-      const v = defense.enableEscape ? escapeHtml(c) : c;
+      const source = processInput(c);
+      const v = renderForHtml(source);
       return `<li>${v}</li>`;
     })
     .join("");
@@ -386,40 +571,53 @@ app.get("/stored", (req, res) => {
     return;
   }
 
-  res.type("html").send(`
-    <h3>/stored</h3>
-    <form method="POST" action="/stored">
-      <input name="comment" style="width:520px" placeholder="Try XSS payload here"/>
-      <button type="submit">Submit</button>
-    </form>
-    <ul>${items}</ul>
-    <p><a href="/" target="_top">Back to lab</a></p>
-  `);
+  renderTestPage(res, {
+    route: "stored",
+    title: "Stored",
+    bodyInner: `
+<h3>/stored</h3>
+<form method="POST" action="/stored">
+  <input name="comment" style="width:520px" placeholder="Try XSS payload here"/>
+  <button type="submit">Submit</button>
+</form>
+<ul>${items}</ul>
+<p><a href="/" target="_top">Back to lab</a></p>
+`,
+  });
 });
 
 app.post("/stored", (req, res) => {
-  let c = req.body.comment || "";
-  if (defense.enableAllowlist) c = allowlistText(c);
-  comments.push(String(c));
+  const c = String(req.body.comment || "");
+  comments.push(c);
   res.redirect("/stored");
 });
 
 app.get("/dom", (req, res) => {
   const mode = defense.enableDomDefense ? "on" : "off";
   const trustedTypesMode = defense.enableTrustedTypes ? "on" : "off";
-  const nonce = res.locals.nonce;
-  const nonceAttr = nonce ? ` nonce="${nonce}"` : "";
+  const domSanitizerMode = defense.enableDomSanitizer ? "on" : "off";
+  const avoidInnerHtmlMode = defense.enableAvoidInnerHtml ? "on" : "off";
+  const contextEncodingMode = defense.enableContextEncoding ? "on" : "off";
+  const attr = nonceAttr(res);
 
-  res.type("html").send(`
-    <h3>/dom</h3>
-    <p>DOM sink mode: ${mode}. Trusted Types mode: ${trustedTypesMode}.</p>
-    <div id="dom-target" data-dom-defense="${mode}" data-trusted-types="${trustedTypesMode}"></div>
-    <script${nonceAttr} src="/static/dom.js"></script>
-    <p><a href="/" target="_top">Back to lab</a></p>
-  `);
+  renderTestPage(res, {
+    route: "dom",
+    title: "DOM",
+    bodyInner: `
+<h3>/dom</h3>
+<p>DOM sink mode: ${mode}. Trusted Types mode: ${trustedTypesMode}.</p>
+<div id="dom-target"
+  data-dom-defense="${mode}"
+  data-trusted-types="${trustedTypesMode}"
+  data-dom-sanitizer="${domSanitizerMode}"
+  data-avoid-inner-html="${avoidInnerHtmlMode}"
+  data-context-encoding="${contextEncodingMode}"></div>
+<p><a href="/" target="_top">Back to lab</a></p>
+`,
+    extraScripts: [`<script${attr} src="/static/dom.js"></script>`],
+  });
 });
 
 const port = Number(process.env.PORT || 3000);
 app.listen(port, "0.0.0.0");
-
 

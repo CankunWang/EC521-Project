@@ -7,6 +7,12 @@
   --accent: #0f8b8d;
   --accent-2: #f4a261;
   --line: #d3e1dd;
+  --danger: #b42318;
+  --danger-bg: #fff2f0;
+  --safe: #027a48;
+  --safe-bg: #ecfdf3;
+  --run: #b54708;
+  --run-bg: #fffaeb;
 }
 
 * {
@@ -141,13 +147,64 @@ button:hover {
   margin-bottom: 12px;
 }
 
+.result-card {
+  margin-top: 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px;
+  display: grid;
+  gap: 4px;
+}
+
+.result-card strong {
+  font-size: 0.95rem;
+}
+
+.result-card span {
+  font-size: 0.88rem;
+}
+
+.state-wait {
+  background: #f8fbfa;
+}
+
+.state-running {
+  background: var(--run-bg);
+  border-color: #fedf89;
+  color: var(--run);
+}
+
+.state-safe {
+  background: var(--safe-bg);
+  border-color: #6ce9a6;
+  color: var(--safe);
+}
+
+.state-danger {
+  background: var(--danger-bg);
+  border-color: #fda29b;
+  color: var(--danger);
+}
+
 .lab-frame {
   margin-top: 10px;
   width: 100%;
   min-height: 260px;
-  border: 1px solid var(--line);
+  border: 2px solid var(--line);
   border-radius: 10px;
   background: #fff;
+}
+
+.frame-running {
+  border-color: #f79009;
+}
+
+.frame-safe {
+  border-color: #12b76a;
+}
+
+.frame-danger {
+  border-color: #f04438;
 }
 
 .meta {
