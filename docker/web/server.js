@@ -191,7 +191,7 @@ function buildCsp(nonce) {
     scriptSrc = "'self' 'unsafe-inline'";
   }
 
-  let csp = `default-src 'self'; script-src ${scriptSrc}; object-src 'none'; base-uri 'none'; frame-ancestors 'none'`;
+  let csp = `default-src 'self'; script-src ${scriptSrc}; object-src 'none'; base-uri 'none'; frame-ancestors 'self'`;
 
   if (defense.enableTrustedTypes) {
     csp += "; require-trusted-types-for 'script'; trusted-types xss-lab-policy";
@@ -204,7 +204,7 @@ app.use((req, res, next) => {
   if (!defense.enableSecurityHeaders) return next();
 
   res.setHeader("X-Content-Type-Options", "nosniff");
-  res.setHeader("X-Frame-Options", "DENY");
+  res.setHeader("X-Frame-Options", "SAMEORIGIN");
   res.setHeader("Referrer-Policy", "no-referrer");
   res.setHeader("Cross-Origin-Opener-Policy", "same-origin");
   next();
@@ -421,3 +421,4 @@ app.get("/dom", (req, res) => {
 
 const port = Number(process.env.PORT || 3000);
 app.listen(port, "0.0.0.0");
+
