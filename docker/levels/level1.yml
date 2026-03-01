@@ -1,0 +1,4 @@
+services:
+  web:
+    environment:
+      DEFENSE_LEVEL: "1"

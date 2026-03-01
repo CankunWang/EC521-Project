@@ -1,7 +1,29 @@
-﻿services:
+services:
   web:
     build: ./web
     ports:
-      - "3000:3000"
-    env_file:
-      - .env
+      - "${HOST_PORT:-3000}:3000"
+    environment:
+      PORT: "${PORT:-3000}"
+      DEFENSE_LEVEL: "${DEFENSE_LEVEL:-0}"
+
+      LAYER1_ENABLED: "${LAYER1_ENABLED:-}"
+      LAYER2_ENABLED: "${LAYER2_ENABLED:-}"
+      LAYER3_ENABLED: "${LAYER3_ENABLED:-}"
+      LAYER4_ENABLED: "${LAYER4_ENABLED:-}"
+
+      ENABLE_ESCAPE: "${ENABLE_ESCAPE:-}"
+      ENABLE_ALLOWLIST: "${ENABLE_ALLOWLIST:-}"
+      ENABLE_TEXT_RENDER: "${ENABLE_TEXT_RENDER:-}"
+
+      ENABLE_CSP: "${ENABLE_CSP:-}"
+      CSP_MODE: "${CSP_MODE:-}"
+      ENABLE_DOM_DEFENSE: "${ENABLE_DOM_DEFENSE:-}"
+      ENABLE_TRUSTED_TYPES: "${ENABLE_TRUSTED_TYPES:-}"
+
+      ENABLE_SECURITY_HEADERS: "${ENABLE_SECURITY_HEADERS:-}"
+
+      COOKIE_HTTPONLY: "${COOKIE_HTTPONLY:-}"
+      COOKIE_SECURE: "${COOKIE_SECURE:-}"
+      COOKIE_SAMESITE: "${COOKIE_SAMESITE:-}"
+

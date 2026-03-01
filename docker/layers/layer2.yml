@@ -1,0 +1,4 @@
+services:
+  web:
+    environment:
+      LAYER2_ENABLED: "1"
