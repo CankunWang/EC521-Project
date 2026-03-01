@@ -196,8 +196,18 @@
   },
   "active": "7b0ba11925702e2b",
   "lastOpenFiles": [
+    "Proposal/XSS_Defense_Evaluation_Proposal 1.md",
     "Proposal/XSS_Defense_Evaluation_Proposal.md",
-    "README.md",
-    "Proposal"
+    "docker/docker-compose.yml",
+    "docker/web/public/dom.js",
+    "docker/web/server.js",
+    "docker/web/public",
+    "docker/web/package.json",
+    "docker/web/Dockerfile",
+    "docker/web",
+    "docker/env",
+    "docker",
+    "新建文件夹",
+    "README.md"
   ]
 }

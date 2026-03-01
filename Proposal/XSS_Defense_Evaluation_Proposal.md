@@ -17,18 +17,24 @@
 ## 4. System Design
 #### 4.1 Experimental Environment(dockerized web application)
 #### 4.2 Defenses layers
-##### 4.2.1 Layer 1(Rendering controls)
-	Output encoding(HTML Escaping)
-	Test rendering
-	Field allowlist(hard encoding)
-##### 4.2.2 Layer2 (Execution controls)
+##### 4.2.1 Layer 1(Input&Output handling)
+	Context aware encoding
+	HTML escaping
+	Template auto-escaping
+	Allowlist validation
+##### 4.2.2 Layer2 (Browser Enforcement)
 	Content security policy(CSP)
 	DOM api restriction
-##### 4.2.3 Impact Reduction
+	Trusted Type
+##### 4.2.3 Layer3 (Session Protection)
 	Cookie httponly
 	same site policy
 	same origin policy
 	Cookie secure
+##### 4.2.4 Layer4 (Architectural Controls)
+	Framework auto-escaping
+	Avoid Inner HTML
+	Security headers baseline
 ## 5. Methodology
 #### 5.1 Attack categories
 	Reflected XSS
@@ -40,8 +46,17 @@
 	effectiveness(data exfiltration)
 	blocking rate
 	Defense complexity
-
-## 6. Team members
+	Questions: 
+		Does implementation follow contextual encoding?
+		Is CSP strict-dynamic?
+		Are cookies properly flagged?
+		Is inline script allowed?
+## 6. Model
+	Level 1: Basic encoding
+	Level 2: Encoding + CSP
+	Level 3: Full contextual encoding + Strict CSP
+	Level 4: Trusted Types + Architectural redesign
+## 7. Team members
 	Cankun Wang
 	Krista Smith
 	Thinh Phuc Nguyen
