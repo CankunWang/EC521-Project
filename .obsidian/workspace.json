@@ -78,7 +78,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300
+    "width": 298.5
   },
   "right": {
     "id": "4270ae6c8158adc7",
@@ -194,20 +194,21 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "7b0ba11925702e2b",
+  "active": "49165b7adb6ae03f",
   "lastOpenFiles": [
+    "docker/levels/level4.yml",
+    "docker/levels/level3.yml",
+    "docker/levels/level2.yml",
+    "docker/levels/level1.yml",
+    "docker/levels/level0.yml",
+    "docker/layers/layer4.yml",
+    "docker/layers/layer3.yml",
+    "docker/layers/layer2.yml",
+    "docker/layers/layer1.yml",
+    "docker/web/public/lab.css",
+    "docker/web/public/lab.js",
     "Proposal/XSS_Defense_Evaluation_Proposal 1.md",
     "Proposal/XSS_Defense_Evaluation_Proposal.md",
-    "docker/docker-compose.yml",
-    "docker/web/public/dom.js",
-    "docker/web/server.js",
-    "docker/web/public",
-    "docker/web/package.json",
-    "docker/web/Dockerfile",
-    "docker/web",
-    "docker/env",
-    "docker",
-    "新建文件夹",
     "README.md"
   ]
 }

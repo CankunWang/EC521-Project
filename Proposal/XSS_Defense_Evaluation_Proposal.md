@@ -22,10 +22,13 @@
 	HTML escaping
 	Template auto-escaping
 	Allowlist validation
+	DOM Sanitization Library
+	Output Encoding 
 ##### 4.2.2 Layer2 (Browser Enforcement)
 	Content security policy(CSP)
 	DOM api restriction
 	Trusted Type
+	Cross-Origin Isulation Header
 ##### 4.2.3 Layer3 (Session Protection)
 	Cookie httponly
 	same site policy
@@ -40,6 +43,14 @@
 	Reflected XSS
 	Stored XSS
 	DOM-based XSS
+		Script Injection
+		Event Handler injection
+		Atrribute Breakout
+		JavaScript URL Injection
+		CSS based Injection
+		SVG Injection
+		Template Injection
+		Mutation XSS
 #### 5.2 Evaluation metrics
 	Success rate
 	Script execution success

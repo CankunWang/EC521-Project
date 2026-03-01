@@ -342,7 +342,7 @@ app.get("/login", (req, res) => {
   res.type("html").send(`
     <p>Set cookie: session=demo-session-token</p>
     <p><a href="/me">Go /me</a></p>
-    <p><a href="/">Back to lab</a></p>
+    <p><a href="/" target="_top">Back to lab</a></p>
   `);
 });
 
@@ -350,7 +350,7 @@ app.get("/me", (req, res) => {
   res.type("html").send(`
     <h3>/me</h3>
     <p>Cookie session: ${escapeHtml(req.cookies.session || "")}</p>
-    <p><a href="/">Back to lab</a></p>
+    <p><a href="/" target="_top">Back to lab</a></p>
   `);
 });
 
@@ -369,7 +369,7 @@ app.get("/reflect", (req, res) => {
     <h3>/reflect</h3>
     <p>Query:</p>
     <div id="out">${out}</div>
-    <p><a href="/">Back to lab</a></p>
+    <p><a href="/" target="_top">Back to lab</a></p>
   `);
 });
 
@@ -393,7 +393,7 @@ app.get("/stored", (req, res) => {
       <button type="submit">Submit</button>
     </form>
     <ul>${items}</ul>
-    <p><a href="/">Back to lab</a></p>
+    <p><a href="/" target="_top">Back to lab</a></p>
   `);
 });
 
@@ -415,10 +415,11 @@ app.get("/dom", (req, res) => {
     <p>DOM sink mode: ${mode}. Trusted Types mode: ${trustedTypesMode}.</p>
     <div id="dom-target" data-dom-defense="${mode}" data-trusted-types="${trustedTypesMode}"></div>
     <script${nonceAttr} src="/static/dom.js"></script>
-    <p><a href="/">Back to lab</a></p>
+    <p><a href="/" target="_top">Back to lab</a></p>
   `);
 });
 
 const port = Number(process.env.PORT || 3000);
 app.listen(port, "0.0.0.0");
+
 
