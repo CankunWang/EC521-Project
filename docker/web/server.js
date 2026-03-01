@@ -297,7 +297,7 @@ function renderTestPage(res, options) {
   const extraScripts = options.extraScripts || [];
   const attr = nonceAttr(res);
 
-  const probeScript = `<script${attr} src="/static/probe.js"></script>`;
+  const probeScript = `<script${attr} src="/static/probe.js?route=${encodeURIComponent(route)}"></script>`;
   const extraScriptHtml = extraScripts.join("\n    ");
 
   res.type("html").send(`
@@ -513,7 +513,7 @@ app.get("/login", (req, res) => {
   res.type("html").send(`
     <p>Set cookie: session=demo-session-token</p>
     <p><a href="/me">Go /me</a></p>
-    <p><a href="/" target="_top">Back to lab</a></p>
+    
   `);
 });
 
@@ -521,7 +521,7 @@ app.get("/me", (req, res) => {
   res.type("html").send(`
     <h3>/me</h3>
     <p>Cookie session: ${escapeHtml(req.cookies.session || "")}</p>
-    <p><a href="/" target="_top">Back to lab</a></p>
+    
   `);
 });
 
@@ -552,7 +552,7 @@ app.get("/reflect", (req, res) => {
   <li>JS string: <code>${escapeHtml(jsOut)}</code></li>
   <li>URL: <code>${escapeHtml(safeUrl)}</code></li>
 </ul>
-<p><a href="/" target="_top">Back to lab</a></p>
+
 `,
   });
 });
@@ -581,7 +581,7 @@ app.get("/stored", (req, res) => {
   <button type="submit">Submit</button>
 </form>
 <ul>${items}</ul>
-<p><a href="/" target="_top">Back to lab</a></p>
+
 `,
   });
 });
@@ -612,7 +612,7 @@ app.get("/dom", (req, res) => {
   data-dom-sanitizer="${domSanitizerMode}"
   data-avoid-inner-html="${avoidInnerHtmlMode}"
   data-context-encoding="${contextEncodingMode}"></div>
-<p><a href="/" target="_top">Back to lab</a></p>
+
 `,
     extraScripts: [`<script${attr} src="/static/dom.js"></script>`],
   });
@@ -620,4 +620,5 @@ app.get("/dom", (req, res) => {
 
 const port = Number(process.env.PORT || 3000);
 app.listen(port, "0.0.0.0");
+
 
