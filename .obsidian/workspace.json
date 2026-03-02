@@ -194,8 +194,9 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "49165b7adb6ae03f",
+  "active": "7b0ba11925702e2b",
   "lastOpenFiles": [
+    "docker/web/public/probe.js",
     "docker/levels/level4.yml",
     "docker/levels/level3.yml",
     "docker/levels/level2.yml",
@@ -206,7 +207,6 @@
     "docker/layers/layer2.yml",
     "docker/layers/layer1.yml",
     "docker/web/public/lab.css",
-    "docker/web/public/lab.js",
     "Proposal/XSS_Defense_Evaluation_Proposal 1.md",
     "Proposal/XSS_Defense_Evaluation_Proposal.md",
     "README.md"
