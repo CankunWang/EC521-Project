@@ -7,6 +7,7 @@ A Docker-based web lab for evaluating reflected, stored, and DOM XSS attacks und
 - A visual dashboard UI (`/`) for running XSS experiments
 - Clear per-test execution results (`XSS Executed` vs `Blocked / Neutralized`)
 - Docker-controlled defense switches (by **level** or by **layer**)
+- Express server-rendered pages using EJS templates for safer default rendering experiments
 - Repeatable startup for security testing and comparison
 
 ## Prerequisites

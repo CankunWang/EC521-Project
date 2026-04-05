@@ -1,12 +1,15 @@
 const express = require("express");
 const cookieParser = require("cookie-parser");
 const crypto = require("crypto");
+const path = require("path");
 
 const app = express();
+app.set("view engine", "ejs");
+app.set("views", path.join(__dirname, "views"));
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 app.use(cookieParser());
-app.use("/static", express.static("public"));
+app.use("/static", express.static(path.join(__dirname, "public")));
 
 const comments = [];
 
@@ -290,31 +293,8 @@ function renderForHtml(raw) {
   return String(raw);
 }
 
-function renderTestPage(res, options) {
-  const route = options.route;
-  const title = options.title;
-  const bodyInner = options.bodyInner;
-  const extraScripts = options.extraScripts || [];
-  const attr = nonceAttr(res);
-
-  const probeScript = `<script${attr} src="/static/probe.js?route=${encodeURIComponent(route)}"></script>`;
-  const extraScriptHtml = extraScripts.join("\n    ");
-
-  res.type("html").send(`
-<!doctype html>
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>${escapeHtml(title)}</title>
-    ${probeScript}
-  </head>
-  <body data-lab-route="${escapeAttr(route)}">
-    ${bodyInner}
-    ${extraScriptHtml}
-  </body>
-</html>
-  `);
+function htmlOutputEscaped() {
+  return defense.enableEscape || defense.enableTemplateAutoEscape || defense.enableContextEncoding;
 }
 
 app.use((req, res, next) => {
@@ -371,94 +351,9 @@ app.use((req, res, next) => {
 });
 
 app.get("/", (req, res) => {
-  const attr = nonceAttr(res);
-
-  res.type("html").send(`
-<!doctype html>
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>XSS Defense Lab</title>
-    <link rel="stylesheet" href="/static/lab.css" />
-  </head>
-  <body>
-    <main class="lab-shell">
-      <header class="hero">
-        <p class="hero-kicker">Dockerized Security Playground</p>
-        <h1>XSS Defense Lab Dashboard</h1>
-        <p>Layered defense simulation with visual pass/fail indicators for each payload test.</p>
-      </header>
-
-      <section class="panel panel-config">
-        <div>
-          <h2>Layer Switch Board</h2>
-          <p>Layers are controlled by Docker environment switches.</p>
-        </div>
-        <div id="config-view" class="config-grid"></div>
-      </section>
-
-      <section class="grid-two">
-        <article class="panel">
-          <h3>Reflected XSS</h3>
-          <form id="reflect-form" class="stack-form">
-            <label>Payload</label>
-            <input id="reflect-input" value="<img src=x onerror=alert('reflect-xss')>" />
-            <button type="submit">Run Reflect Test</button>
-          </form>
-          <div id="reflect-result" class="result-card state-wait">
-            <strong>Waiting</strong>
-            <span>Run a payload to evaluate reflected execution.</span>
-          </div>
-          <iframe id="reflect-frame" class="lab-frame" title="Reflect preview"></iframe>
-        </article>
-
-        <article class="panel">
-          <h3>Stored XSS</h3>
-          <form id="stored-form" class="stack-form">
-            <label>Comment Payload</label>
-            <input id="stored-input" value="<script>alert('stored-xss')</script>" />
-            <button type="submit">Run Stored Test</button>
-          </form>
-          <div id="stored-result" class="result-card state-wait">
-            <strong>Waiting</strong>
-            <span>Run a payload to evaluate stored execution.</span>
-          </div>
-          <div id="stored-meta" class="meta"></div>
-          <iframe id="stored-frame" class="lab-frame" title="Stored preview"></iframe>
-        </article>
-      </section>
-
-      <section class="grid-two">
-        <article class="panel">
-          <h3>DOM XSS</h3>
-          <form id="dom-form" class="stack-form">
-            <label>Payload</label>
-            <input id="dom-input" value="<img src=x onerror=alert('dom-xss')>" />
-            <button type="submit">Run DOM Test</button>
-          </form>
-          <div id="dom-result" class="result-card state-wait">
-            <strong>Waiting</strong>
-            <span>Run a payload to evaluate DOM execution.</span>
-          </div>
-          <iframe id="dom-frame" class="lab-frame" title="DOM preview"></iframe>
-        </article>
-
-        <article class="panel">
-          <h3>Session Layer</h3>
-          <div class="actions">
-            <button id="login-btn" type="button">Set Session Cookie</button>
-            <button id="me-btn" type="button">Read /me</button>
-          </div>
-          <pre id="session-box" class="session-box"></pre>
-        </article>
-      </section>
-    </main>
-
-    <script${attr} src="/static/lab.js"></script>
-  </body>
-</html>
-  `);
+  res.render("index", {
+    nonce: res.locals.nonce || "",
+  });
 });
 
 app.get("/api/config", (req, res) => {
@@ -510,23 +405,21 @@ app.get("/api/me", (req, res) => {
 
 app.get("/login", (req, res) => {
   res.cookie("session", "demo-session-token", cookieOptionsFromConfig());
-  res.type("html").send(`
-    <p>Set cookie: session=demo-session-token</p>
-    <p><a href="/me">Go /me</a></p>
-    
-  `);
+  res.render("login", {
+    title: "Login",
+  });
 });
 
 app.get("/me", (req, res) => {
-  res.type("html").send(`
-    <h3>/me</h3>
-    <p>Cookie session: ${escapeHtml(req.cookies.session || "")}</p>
-    
-  `);
+  res.render("me", {
+    title: "Me",
+    session: req.cookies.session || "",
+  });
 });
 
 app.get("/reflect", (req, res) => {
   const source = processInput(req.query.q || "");
+  const safeHtmlOutput = htmlOutputEscaped();
   const htmlOut = renderForHtml(source);
   const attrOut = defense.enableContextEncoding ? escapeAttr(source) : source;
   const jsOut = defense.enableContextEncoding ? escapeJsString(source) : source;
@@ -537,52 +430,34 @@ app.get("/reflect", (req, res) => {
     return;
   }
 
-  renderTestPage(res, {
-    route: "reflect",
+  res.render("reflect", {
     title: "Reflect",
-    bodyInner: `
-<h3>/reflect</h3>
-<p>Query:</p>
-<div id="out">${htmlOut}</div>
-<hr />
-<p><strong>Context Output Preview</strong></p>
-<ul>
-  <li>HTML: <code>${escapeHtml(htmlOut)}</code></li>
-  <li>Attribute: <code>${escapeHtml(attrOut)}</code></li>
-  <li>JS string: <code>${escapeHtml(jsOut)}</code></li>
-  <li>URL: <code>${escapeHtml(safeUrl)}</code></li>
-</ul>
-
-`,
+    route: "reflect",
+    nonce: res.locals.nonce || "",
+    source,
+    safeHtmlOutput,
+    htmlOut,
+    attrOut,
+    jsOut,
+    safeUrl,
   });
 });
 
 app.get("/stored", (req, res) => {
-  const items = comments
-    .map((c) => {
-      const source = processInput(c);
-      const v = renderForHtml(source);
-      return `<li>${v}</li>`;
-    })
-    .join("");
+  const safeHtmlOutput = htmlOutputEscaped();
+  const items = comments.map((c) => processInput(c));
 
   if (defense.enableTextRender) {
     res.type("text/plain").send(comments.join("\n"));
     return;
   }
 
-  renderTestPage(res, {
-    route: "stored",
+  res.render("stored", {
     title: "Stored",
-    bodyInner: `
-<h3>/stored</h3>
-<form method="POST" action="/stored">
-  <input name="comment" style="width:520px" placeholder="Try XSS payload here"/>
-  <button type="submit">Submit</button>
-</form>
-<ul>${items}</ul>
-
-`,
+    route: "stored",
+    nonce: res.locals.nonce || "",
+    items,
+    safeHtmlOutput,
   });
 });
 
@@ -598,23 +473,16 @@ app.get("/dom", (req, res) => {
   const domSanitizerMode = defense.enableDomSanitizer ? "on" : "off";
   const avoidInnerHtmlMode = defense.enableAvoidInnerHtml ? "on" : "off";
   const contextEncodingMode = defense.enableContextEncoding ? "on" : "off";
-  const attr = nonceAttr(res);
 
-  renderTestPage(res, {
-    route: "dom",
+  res.render("dom", {
     title: "DOM",
-    bodyInner: `
-<h3>/dom</h3>
-<p>DOM sink mode: ${mode}. Trusted Types mode: ${trustedTypesMode}.</p>
-<div id="dom-target"
-  data-dom-defense="${mode}"
-  data-trusted-types="${trustedTypesMode}"
-  data-dom-sanitizer="${domSanitizerMode}"
-  data-avoid-inner-html="${avoidInnerHtmlMode}"
-  data-context-encoding="${contextEncodingMode}"></div>
-
-`,
-    extraScripts: [`<script${attr} src="/static/dom.js"></script>`],
+    route: "dom",
+    nonce: res.locals.nonce || "",
+    mode,
+    trustedTypesMode,
+    domSanitizerMode,
+    avoidInnerHtmlMode,
+    contextEncodingMode,
   });
 });
 

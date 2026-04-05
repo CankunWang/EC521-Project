@@ -1,0 +1,84 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>XSS Defense Lab</title>
+    <link rel="stylesheet" href="/static/lab.css" />
+  </head>
+  <body>
+    <main class="lab-shell">
+      <header class="hero">
+        <p class="hero-kicker">Dockerized Security Playground</p>
+        <h1>XSS Defense Lab Dashboard</h1>
+        <p>Layered defense simulation with visual pass/fail indicators for each payload test.</p>
+      </header>
+
+      <section class="panel panel-config">
+        <div>
+          <h2>Layer Switch Board</h2>
+          <p>Layers are controlled by Docker environment switches.</p>
+        </div>
+        <div id="config-view" class="config-grid"></div>
+      </section>
+
+      <section class="grid-two">
+        <article class="panel">
+          <h3>Reflected XSS</h3>
+          <form id="reflect-form" class="stack-form">
+            <label>Payload</label>
+            <input id="reflect-input" value="<img src=x onerror=alert('reflect-xss')>" />
+            <button type="submit">Run Reflect Test</button>
+          </form>
+          <div id="reflect-result" class="result-card state-wait">
+            <strong>Waiting</strong>
+            <span>Run a payload to evaluate reflected execution.</span>
+          </div>
+          <iframe id="reflect-frame" class="lab-frame" title="Reflect preview"></iframe>
+        </article>
+
+        <article class="panel">
+          <h3>Stored XSS</h3>
+          <form id="stored-form" class="stack-form">
+            <label>Comment Payload</label>
+            <input id="stored-input" value="<script>alert('stored-xss')</script>" />
+            <button type="submit">Run Stored Test</button>
+          </form>
+          <div id="stored-result" class="result-card state-wait">
+            <strong>Waiting</strong>
+            <span>Run a payload to evaluate stored execution.</span>
+          </div>
+          <div id="stored-meta" class="meta"></div>
+          <iframe id="stored-frame" class="lab-frame" title="Stored preview"></iframe>
+        </article>
+      </section>
+
+      <section class="grid-two">
+        <article class="panel">
+          <h3>DOM XSS</h3>
+          <form id="dom-form" class="stack-form">
+            <label>Payload</label>
+            <input id="dom-input" value="<img src=x onerror=alert('dom-xss')>" />
+            <button type="submit">Run DOM Test</button>
+          </form>
+          <div id="dom-result" class="result-card state-wait">
+            <strong>Waiting</strong>
+            <span>Run a payload to evaluate DOM execution.</span>
+          </div>
+          <iframe id="dom-frame" class="lab-frame" title="DOM preview"></iframe>
+        </article>
+
+        <article class="panel">
+          <h3>Session Layer</h3>
+          <div class="actions">
+            <button id="login-btn" type="button">Set Session Cookie</button>
+            <button id="me-btn" type="button">Read /me</button>
+          </div>
+          <pre id="session-box" class="session-box"></pre>
+        </article>
+      </section>
+    </main>
+
+    <script<% if (nonce) { %> nonce="<%= nonce %>"<% } %> src="/static/lab.js"></script>
+  </body>
+</html>

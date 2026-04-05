@@ -1,0 +1,22 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title><%= title %></title>
+    <script<% if (nonce) { %> nonce="<%= nonce %>"<% } %> src="/static/probe.js?route=<%= encodeURIComponent(route) %>"></script>
+  </head>
+  <body data-lab-route="<%= route %>">
+    <h3>/dom</h3>
+    <p>DOM sink mode: <%= mode %>. Trusted Types mode: <%= trustedTypesMode %>.</p>
+    <div
+      id="dom-target"
+      data-dom-defense="<%= mode %>"
+      data-trusted-types="<%= trustedTypesMode %>"
+      data-dom-sanitizer="<%= domSanitizerMode %>"
+      data-avoid-inner-html="<%= avoidInnerHtmlMode %>"
+      data-context-encoding="<%= contextEncodingMode %>"></div>
+
+    <script<% if (nonce) { %> nonce="<%= nonce %>"<% } %> src="/static/dom.js"></script>
+  </body>
+</html>

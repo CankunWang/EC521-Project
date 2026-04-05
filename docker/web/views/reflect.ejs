@@ -1,0 +1,22 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title><%= title %></title>
+    <script<% if (nonce) { %> nonce="<%= nonce %>"<% } %> src="/static/probe.js?route=<%= encodeURIComponent(route) %>"></script>
+  </head>
+  <body data-lab-route="<%= route %>">
+    <h3>/reflect</h3>
+    <p>Query:</p>
+    <div id="out"><% if (safeHtmlOutput) { %><%= source %><% } else { %><%- source %><% } %></div>
+    <hr />
+    <p><strong>Context Output Preview</strong></p>
+    <ul>
+      <li>HTML: <code><%= htmlOut %></code></li>
+      <li>Attribute: <code><%= attrOut %></code></li>
+      <li>JS string: <code><%= jsOut %></code></li>
+      <li>URL: <code><%= safeUrl %></code></li>
+    </ul>
+  </body>
+</html>
