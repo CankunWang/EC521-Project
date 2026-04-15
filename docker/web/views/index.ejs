@@ -11,7 +11,7 @@
       <header class="hero">
         <p class="hero-kicker">Dockerized Security Playground</p>
         <h1>XSS Defense Lab Dashboard</h1>
-        <p>Layered defense simulation with visual pass/fail indicators for each payload test.</p>
+        <p>Layered defense simulation that treats a payload as successful only when it causes an observable state change.</p>
       </header>
 
       <section class="panel panel-config">
@@ -27,12 +27,12 @@
           <h3>Reflected XSS</h3>
           <form id="reflect-form" class="stack-form">
             <label>Payload</label>
-            <input id="reflect-input" value="<img src=x onerror=alert('reflect-xss')>" />
+            <input id="reflect-input" value="<img src=x onerror=&quot;document.body.dataset.xssState='reflect-executed';document.getElementById('lab-success-marker').textContent='Payload state: reflect-executed'&quot;>" />
             <button type="submit">Run Reflect Test</button>
           </form>
           <div id="reflect-result" class="result-card state-wait">
             <strong>Waiting</strong>
-            <span>Run a payload to evaluate reflected execution.</span>
+            <span>Run a payload to evaluate reflected state changes.</span>
           </div>
           <iframe id="reflect-frame" class="lab-frame" title="Reflect preview"></iframe>
         </article>
@@ -41,12 +41,12 @@
           <h3>Stored XSS</h3>
           <form id="stored-form" class="stack-form">
             <label>Comment Payload</label>
-            <input id="stored-input" value="<script>alert('stored-xss')</script>" />
+            <input id="stored-input" value="<script>document.body.dataset.xssState='stored-executed';document.getElementById('lab-success-marker').textContent='Payload state: stored-executed';</script>" />
             <button type="submit">Run Stored Test</button>
           </form>
           <div id="stored-result" class="result-card state-wait">
             <strong>Waiting</strong>
-            <span>Run a payload to evaluate stored execution.</span>
+            <span>Run a payload to evaluate stored state changes.</span>
           </div>
           <div id="stored-meta" class="meta"></div>
           <iframe id="stored-frame" class="lab-frame" title="Stored preview"></iframe>
@@ -58,18 +58,19 @@
           <h3>DOM XSS</h3>
           <form id="dom-form" class="stack-form">
             <label>Payload</label>
-            <input id="dom-input" value="<img src=x onerror=alert('dom-xss')>" />
+            <input id="dom-input" value="<img src=x onerror=&quot;document.body.dataset.xssState='dom-executed';document.getElementById('lab-success-marker').textContent='Payload state: dom-executed'&quot;>" />
             <button type="submit">Run DOM Test</button>
           </form>
           <div id="dom-result" class="result-card state-wait">
             <strong>Waiting</strong>
-            <span>Run a payload to evaluate DOM execution.</span>
+            <span>Run a payload to evaluate DOM state changes.</span>
           </div>
           <iframe id="dom-frame" class="lab-frame" title="DOM preview"></iframe>
         </article>
 
         <article class="panel">
           <h3>Session Layer</h3>
+          <p class="panel-note">Cookie access or data exfiltration are optional payload goals, not the default success criterion in this lab.</p>
           <div class="actions">
             <button id="login-btn" type="button">Set Session Cookie</button>
             <button id="me-btn" type="button">Read /me</button>

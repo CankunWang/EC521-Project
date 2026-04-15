@@ -6,8 +6,9 @@
     <title><%= title %></title>
     <script<% if (nonce) { %> nonce="<%= nonce %>"<% } %> src="/static/probe.js?route=<%= encodeURIComponent(route) %>"></script>
   </head>
-  <body data-lab-route="<%= route %>">
+  <body data-lab-route="<%= route %>" data-xss-state="idle">
     <h3>/dom</h3>
+    <p id="lab-success-marker">Payload state: idle</p>
     <p>DOM sink mode: <%= mode %>. Trusted Types mode: <%= trustedTypesMode %>.</p>
     <div
       id="dom-target"

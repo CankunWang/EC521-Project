@@ -6,8 +6,9 @@
     <title><%= title %></title>
     <script<% if (nonce) { %> nonce="<%= nonce %>"<% } %> src="/static/probe.js?route=<%= encodeURIComponent(route) %>"></script>
   </head>
-  <body data-lab-route="<%= route %>">
+  <body data-lab-route="<%= route %>" data-xss-state="idle">
     <h3>/stored</h3>
+    <p id="lab-success-marker">Payload state: idle</p>
     <form method="POST" action="/stored">
       <input name="comment" style="width: 520px" placeholder="Try XSS payload here" />
       <button type="submit">Submit</button>

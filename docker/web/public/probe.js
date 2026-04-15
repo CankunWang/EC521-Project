@@ -2,6 +2,8 @@
   if (window.parent === window) return;
 
   var route = "unknown";
+  var successSent = false;
+  var defaultMarkerText = "Payload state: idle";
 
   function detectRoute() {
     try {
@@ -35,35 +37,91 @@
     );
   }
 
-  function overrideSink(name) {
-    var original = window[name];
-    if (typeof original !== "function") return;
+  function marker() {
+    return document.getElementById("lab-success-marker");
+  }
 
-    window[name] = function () {
-      var value = arguments.length ? String(arguments[0]) : "";
-      emit("xss", { sink: name, value: value });
-      return undefined;
+  function markerText() {
+    var node = marker();
+    return node ? String(node.textContent || "").trim() : "";
+  }
+
+  function bodyState() {
+    return document.body ? String(document.body.getAttribute("data-xss-state") || "").trim() : "";
+  }
+
+  function emitSuccess(detail) {
+    if (successSent) return;
+    successSent = true;
+    emit("xss", {
+      sink: "observable-state-change",
+      value: detail || markerText() || bodyState() || "state-change",
+    });
+  }
+
+  function checkVisibleStateChange() {
+    var state = bodyState();
+    var text = markerText();
+
+    if (state && state !== "idle") {
+      emitSuccess(state);
+      return;
+    }
+
+    if (text && text !== defaultMarkerText) {
+      emitSuccess(text);
+    }
+  }
+
+  function installMarkerHelpers() {
+    window.__xssLabSignal = function (value) {
+      var node = marker();
+      var detail = value ? String(value) : "executed";
+
+      if (document.body) {
+        document.body.setAttribute("data-xss-state", detail);
+      }
+
+      if (node) {
+        node.textContent = "Payload state: " + detail;
+      }
+
+      checkVisibleStateChange();
     };
   }
 
-  overrideSink("alert");
-  overrideSink("confirm");
-  overrideSink("prompt");
+  function observeStateChange() {
+    if (document.body) {
+      new MutationObserver(checkVisibleStateChange).observe(document.body, {
+        attributes: true,
+        attributeFilter: ["data-xss-state"],
+      });
+    }
+
+    var node = marker();
+    if (node) {
+      new MutationObserver(checkVisibleStateChange).observe(node, {
+        childList: true,
+        characterData: true,
+        subtree: true,
+        attributes: true,
+      });
+    }
+  }
 
   window.addEventListener("error", function (e) {
     emit("error", { message: e.message || "script_error" });
   });
 
-  if (route === "unknown") {
-    window.addEventListener(
-      "DOMContentLoaded",
-      function () {
-        route = detectRoute();
-        emit("ready", { route: route });
-      },
-      { once: true }
-    );
-  } else {
-    emit("ready", { route: route });
-  }
+  window.addEventListener(
+    "DOMContentLoaded",
+    function () {
+      route = detectRoute();
+      installMarkerHelpers();
+      observeStateChange();
+      checkVisibleStateChange();
+      emit("ready", { route: route });
+    },
+    { once: true }
+  );
 })();

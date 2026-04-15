@@ -4,22 +4,22 @@
       frameId: "reflect-frame",
       inputId: "reflect-input",
       resultId: "reflect-result",
-      pendingText: "Testing reflected payload execution...",
-      safeText: "No execution signal observed. Payload likely blocked or neutralized.",
+      pendingText: "Testing reflected payload for observable state changes...",
+      safeText: "No observable state change was captured. Payload likely blocked or neutralized.",
     },
     stored: {
       frameId: "stored-frame",
       inputId: "stored-input",
       resultId: "stored-result",
-      pendingText: "Testing stored payload execution...",
-      safeText: "No execution signal observed. Stored payload likely blocked or neutralized.",
+      pendingText: "Testing stored payload for observable state changes...",
+      safeText: "No observable state change was captured. Stored payload likely blocked or neutralized.",
     },
     dom: {
       frameId: "dom-frame",
       inputId: "dom-input",
       resultId: "dom-result",
-      pendingText: "Testing DOM payload execution...",
-      safeText: "No execution signal observed. DOM payload likely blocked or neutralized.",
+      pendingText: "Testing DOM payload for observable state changes...",
+      safeText: "No observable state change was captured. DOM payload likely blocked or neutralized.",
     },
   };
 
@@ -198,8 +198,8 @@
         setResult(
           key,
           "state-danger",
-          "XSS Executed",
-          "Signal captured from sink: " + sink + (value ? " (" + value + ")" : "")
+          "Observable State Change",
+          "State-change signal captured from: " + sink + (value ? " (" + value + ")" : "")
         );
       }
     });
@@ -279,9 +279,9 @@
     attachProbeEvents();
     attachHandlers();
 
-    setResult("reflect", "state-wait", "Waiting", "Run a payload to evaluate reflected execution.");
-    setResult("stored", "state-wait", "Waiting", "Run a payload to evaluate stored execution.");
-    setResult("dom", "state-wait", "Waiting", "Run a payload to evaluate DOM execution.");
+    setResult("reflect", "state-wait", "Waiting", "Run a payload to evaluate reflected state changes.");
+    setResult("stored", "state-wait", "Waiting", "Run a payload to evaluate stored state changes.");
+    setResult("dom", "state-wait", "Waiting", "Run a payload to evaluate DOM state changes.");
 
     await loadConfig();
     await refreshCommentsMeta();
