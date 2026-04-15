@@ -89,15 +89,21 @@ function sanitizeUrl(s) {
 
 function allowlistText(s) {
   const t = String(s || "");
-  return t.replaceAll(/[^a-zA-Z0-9 _.,;:!?\-@()/#=&]/g, "");
+  return t
+    .replaceAll(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "")
+    .replaceAll(/\r\n?/g, "\n");
 }
 
 function sanitizeHtmlFragment(input) {
   let s = String(input || "");
   s = s.replaceAll(/<\s*script[^>]*>[\s\S]*?<\s*\/\s*script\s*>/gi, "");
-  s = s.replaceAll(/on[a-z]+\s*=\s*(['"]).*?\1/gi, "");
-  s = s.replaceAll(/on[a-z]+\s*=\s*[^\s>]+/gi, "");
-  s = s.replaceAll(/javascript:/gi, "blocked:");
+  s = s.replaceAll(/<\s*\/?\s*(iframe|object|embed|meta|link|style)[^>]*>/gi, "");
+  s = s.replaceAll(/\s+on[a-z-]+\s*=\s*(['"]).*?\1/gi, "");
+  s = s.replaceAll(/\s+on[a-z-]+\s*=\s*[^\s>]+/gi, "");
+  s = s.replaceAll(
+    /\b(href|src|xlink:href|formaction)\s*=\s*(['"]?)\s*(javascript:|vbscript:|data:text\/html)/gi,
+    '$1=$2#$2'
+  );
   return s;
 }
 
