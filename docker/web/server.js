@@ -244,12 +244,60 @@ function activeLayers(cfg) {
 
 const layers = activeLayers(defense);
 
-function cookieOptionsFromConfig() {
+function configuredCookieOptions() {
   return {
     httpOnly: defense.cookieHttpOnly,
     secure: defense.cookieSecure,
     sameSite: defense.cookieSameSite,
   };
+}
+
+function requestHostname(req) {
+  const host = String(req.get("host") || "").trim().toLowerCase();
+  if (!host) return "";
+
+  if (host.startsWith("[")) {
+    const end = host.indexOf("]");
+    if (end >= 0) {
+      return host.slice(1, end);
+    }
+  }
+
+  const parts = host.split(":");
+  return parts[0];
+}
+
+function isLoopbackHost(hostname) {
+  return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1" || hostname.endsWith(".localhost");
+}
+
+function requestIsHttps(req) {
+  if (req.secure) return true;
+
+  const forwardedProto = String(req.get("x-forwarded-proto") || "")
+    .split(",")[0]
+    .trim()
+    .toLowerCase();
+
+  return forwardedProto === "https";
+}
+
+function cookieOptionsForRequest(req) {
+  const options = configuredCookieOptions();
+
+  if (!options.secure) {
+    return options;
+  }
+
+  if (requestIsHttps(req)) {
+    return options;
+  }
+
+  if (isLoopbackHost(requestHostname(req))) {
+    return { ...options, secure: false };
+  }
+
+  return options;
 }
 
 function buildCsp(nonce) {
@@ -403,8 +451,13 @@ app.delete("/api/comments", (req, res) => {
 });
 
 app.post("/api/login", (req, res) => {
-  res.cookie("session", "demo-session-token", cookieOptionsFromConfig());
-  res.json({ ok: true, cookieOptions: cookieOptionsFromConfig() });
+  const cookieOptions = cookieOptionsForRequest(req);
+  res.cookie("session", "demo-session-token", cookieOptions);
+  res.json({
+    ok: true,
+    cookieOptions,
+    localhostHttpExceptionApplied: defense.cookieSecure && !cookieOptions.secure,
+  });
 });
 
 app.get("/api/me", (req, res) => {
@@ -412,7 +465,7 @@ app.get("/api/me", (req, res) => {
 });
 
 app.get("/login", (req, res) => {
-  res.cookie("session", "demo-session-token", cookieOptionsFromConfig());
+  res.cookie("session", "demo-session-token", cookieOptionsForRequest(req));
   res.render("login", {
     title: "Login",
   });

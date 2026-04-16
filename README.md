@@ -59,6 +59,8 @@ Level meaning:
 - Level 3: Level 2 + strict CSP (`strict-dynamic`) + session protections (cookie flags + origin check)
 - Level 4: Level 3 + architectural controls (Trusted Types, avoid `innerHTML`, security headers baseline)
 
+For local HTTP demos on `localhost`, the lab relaxes the `Secure` cookie flag when issuing the demo session cookie so the Level 3/4 session workflow still works without HTTPS. On HTTPS or non-loopback hosts, the configured `Secure` behavior is kept.
+
 ### 3. Run by layer combination
 
 ```powershell
@@ -124,6 +126,7 @@ Important behavior:
 - If a `LAYER*_ENABLED` variable is set to `1` or `0`, it overrides that layer's level-derived defaults.
 - If an individual switch such as `ENABLE_CSP=1` or `ENABLE_ESCAPE=0` is set, it overrides both the level preset and the layer-wide switch for that specific feature.
 - The dashboard only shows the active effective configuration. It does not change these switches from the browser UI.
+- If `COOKIE_SECURE=1` is active, the lab still drops `secure=false` for cookies issued over plain HTTP on `localhost` so the local demo remains usable; HTTPS and non-loopback hosts keep `secure=true`.
 
 Examples:
 
