@@ -1,0 +1,16 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title><%= title %></title>
+    <script<% if (nonce) { %> nonce="<%= nonce %>"<% } %> src="/static/probe.js?route=<%= encodeURIComponent(route) %>"></script>
+  </head>
+  <body data-lab-route="<%= route %>" data-xss-state="idle">
+    <h3>/gadget</h3>
+    <p id="lab-success-marker">Payload state: idle</p>
+    <p>Trusted script gadget test page.</p>
+
+    <script<% if (nonce) { %> nonce="<%= nonce %>"<% } %> src="/static/gadget.js"></script>
+  </body>
+</html>

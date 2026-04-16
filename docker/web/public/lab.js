@@ -21,6 +21,13 @@
       pendingText: "Testing DOM payload for observable state changes...",
       safeText: "No observable state change was captured. DOM payload likely blocked or neutralized.",
     },
+    gadget: {
+      frameId: "gadget-frame",
+      inputId: "gadget-input",
+      resultId: "gadget-result",
+      pendingText: "Testing trusted script gadget for observable state changes...",
+      safeText: "No observable state change was captured. Gadget execution likely blocked or inert.",
+    },
   };
 
   var runs = {};
@@ -255,6 +262,16 @@
       });
     }
 
+    var gadgetForm = byId("gadget-form");
+    if (gadgetForm) {
+      gadgetForm.addEventListener("submit", function (e) {
+        e.preventDefault();
+        var input = byId("gadget-input");
+        var payload = input ? input.value : "";
+        startRun("gadget", "/gadget?loader=" + encodeURIComponent(payload));
+      });
+    }
+
     var loginBtn = byId("login-btn");
     if (loginBtn) {
       loginBtn.addEventListener("click", async function () {
@@ -282,6 +299,7 @@
     setResult("reflect", "state-wait", "Waiting", "Run a payload to evaluate reflected state changes.");
     setResult("stored", "state-wait", "Waiting", "Run a payload to evaluate stored state changes.");
     setResult("dom", "state-wait", "Waiting", "Run a payload to evaluate DOM state changes.");
+    setResult("gadget", "state-wait", "Waiting", "Run a loader target to evaluate trusted script gadget execution.");
 
     await loadConfig();
     await refreshCommentsMeta();
@@ -290,6 +308,7 @@
     setFrame("reflect-frame", "/reflect?q=%3Cimg%20src%3Dx%20onerror%3Dalert(1)%3E");
     setFrame("stored-frame", "/stored");
     setFrame("dom-frame", "/dom?q=%3Cimg%20src%3Dx%20onerror%3Dalert(1)%3E");
+    setFrame("gadget-frame", "/gadget?loader=%2Fstatic%2Fpayload.js");
   }
 
   boot().catch(function (err) {

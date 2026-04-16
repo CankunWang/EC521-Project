@@ -547,6 +547,14 @@ app.get("/dom", (req, res) => {
   });
 });
 
+app.get("/gadget", (req, res) => {
+  res.render("gadget", {
+    title: "Script Gadget",
+    route: "gadget",
+    nonce: res.locals.nonce || "",
+  });
+});
+
 const port = Number(process.env.PORT || 3000);
 app.listen(port, "0.0.0.0");
 

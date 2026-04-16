@@ -78,6 +78,23 @@
           <pre id="session-box" class="session-box"></pre>
         </article>
       </section>
+
+      <section>
+        <article class="panel">
+          <h3>Script Gadget</h3>
+          <p class="panel-note">Tests a trusted script that reads attacker-controlled input and dynamically loads another script.</p>
+          <form id="gadget-form" class="stack-form">
+            <label>Loader Target</label>
+            <input id="gadget-input" value="/static/payload.js" />
+            <button type="submit">Run Gadget Test</button>
+          </form>
+          <div id="gadget-result" class="result-card state-wait">
+            <strong>Waiting</strong>
+            <span>Run a loader target to evaluate trusted script gadget execution.</span>
+          </div>
+          <iframe id="gadget-frame" class="lab-frame" title="Script gadget preview"></iframe>
+        </article>
+      </section>
     </main>
 
     <script<% if (nonce) { %> nonce="<%= nonce %>"<% } %> src="/static/lab.js"></script>

@@ -1,6 +1,6 @@
 # EC521 Project - Dockerized XSS Defense Lab
 
-A Docker-based web lab for evaluating reflected, stored, and DOM XSS attacks under configurable multi-layer defenses.
+A Docker-based web lab for evaluating reflected, stored, DOM XSS, and script gadget attacks under configurable multi-layer defenses.
 
 ## What this lab provides
 
@@ -8,6 +8,7 @@ A Docker-based web lab for evaluating reflected, stored, and DOM XSS attacks und
 - Clear per-test results based on observable state changes (`Observable State Change` vs `Blocked / Neutralized`)
 - Docker-controlled defense switches (by **level** or by **layer**)
 - Express server-rendered pages using EJS templates for safer default rendering experiments
+- A standalone script gadget exercise for trusted-loader misuse testing
 - Repeatable startup for security testing and comparison
 
 ## Prerequisites
@@ -141,10 +142,36 @@ Examples:
 - `/reflect` reflected XSS route
 - `/stored` stored XSS route
 - `/dom` DOM XSS route
+- `/gadget` trusted script gadget route
 - `/api/config` active defense configuration
 - `/api/comments` stored comment state (`GET`) and reset (`DELETE`)
 - `/api/login` set demo session cookie
 - `/api/me` read current session value
+
+`/gadget` is intentionally separate from the reflected/stored/DOM routes. It models a trusted script that reads attacker-controlled input (`loader`) and dynamically appends a `<script src=...>` element. The default dashboard test uses `/gadget?loader=/static/payload.js`.
+
+## Script Gadget Notes
+
+The `/gadget` exercise is intentionally documented as a separate attack class. It does not primarily test server-side HTML rendering or `innerHTML` sanitization. Instead, it models a trusted script loader that reads attacker-controlled input and dynamically loads another script.
+
+This means `/gadget` is not mainly blocked by:
+
+- `HTML Escape`
+- `Allowlist Validation`
+- `Context Encoding`
+- `Template Auto-Escape`
+- `DOM Sanitizer`
+
+Those controls are useful for reflected/stored/DOM HTML injection, but they do not directly solve an attacker-controlled script loader.
+
+`/gadget` maps more closely to architecture-level defenses, especially:
+
+- avoiding attacker-controlled dynamic script loading
+- using fixed script/module maps instead of raw URL input
+- applying strict allowlists for loadable resources
+- using CSP to restrict external script sources
+
+In the current lab implementation, the default gadget loads a same-origin script (`/static/payload.js`), so a basic `script-src 'self'` CSP will still allow it. If you want `/gadget` to demonstrate CSP blocking more directly, change the gadget test to load an external script and compare the result with CSP disabled vs enabled.
 
 ## Success criterion
 
