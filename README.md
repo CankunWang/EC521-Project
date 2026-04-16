@@ -54,7 +54,7 @@ docker compose -f docker-compose.yml -f levels/level3.yml up --build
 Level meaning:
 
 - Level 0: baseline (no added defenses)
-- Level 1: input/output protections (escaping, allowlist, context encoding, template auto-escape, DOM sanitization)
+- Level 1: input/output protections (escaping, allowlist, context encoding, template auto-escape, DOMPurify-based DOM sanitization)
 - Level 2: Level 1 + browser enforcement (CSP, DOM API restriction, cross-origin isolation)
 - Level 3: Level 2 + strict CSP (`strict-dynamic`) + session protections (cookie flags + origin check)
 - Level 4: Level 3 + architectural controls (Trusted Types, avoid `innerHTML`, security headers baseline)
@@ -107,7 +107,7 @@ Primary runtime variables are in `docker/.env`:
 
 - `DEFENSE_LEVEL` (0-4)
 - `LAYER1_ENABLED` / `LAYER2_ENABLED` / `LAYER3_ENABLED` / `LAYER4_ENABLED`
-- Layer 1 detail switches: `ENABLE_ESCAPE`, `ENABLE_ALLOWLIST`, `ENABLE_CONTEXT_ENCODING`, `ENABLE_TEMPLATE_AUTO_ESCAPE`, `ENABLE_DOM_SANITIZER`
+- Layer 1 detail switches: `ENABLE_ESCAPE`, `ENABLE_ALLOWLIST`, `ENABLE_CONTEXT_ENCODING`, `ENABLE_TEMPLATE_AUTO_ESCAPE`, `ENABLE_DOM_SANITIZER` (`DOMPurify`)
 - Layer 2 detail switches: `ENABLE_CSP`, `CSP_MODE`, `ENABLE_DOM_DEFENSE`, `ENABLE_TRUSTED_TYPES`, `ENABLE_CROSS_ORIGIN_ISOLATION`
 - Layer 3 detail switches: `ENABLE_ORIGIN_CHECK`, `COOKIE_HTTPONLY`, `COOKIE_SECURE`, `COOKIE_SAMESITE`
 - Layer 4 detail switches: `ENABLE_AVOID_INNERHTML`, `ENABLE_SECURITY_HEADERS`

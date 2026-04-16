@@ -2,14 +2,25 @@ const express = require("express");
 const cookieParser = require("cookie-parser");
 const crypto = require("crypto");
 const path = require("path");
+const { JSDOM } = require("jsdom");
 
 const app = express();
+const purifyWindow = new JSDOM("").window;
+global.window = purifyWindow;
+const DOMPurify = require("dompurify");
+const domPurifyOptions = {
+  USE_PROFILES: { html: true },
+  FORBID_TAGS: ["style"],
+  FORBID_ATTR: ["style"],
+};
+
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 app.use(cookieParser());
 app.use("/static", express.static(path.join(__dirname, "public")));
+app.use("/vendor/dompurify", express.static(path.join(__dirname, "node_modules", "dompurify", "dist")));
 
 const comments = [];
 
@@ -95,16 +106,7 @@ function allowlistText(s) {
 }
 
 function sanitizeHtmlFragment(input) {
-  let s = String(input || "");
-  s = s.replaceAll(/<\s*script[^>]*>[\s\S]*?<\s*\/\s*script\s*>/gi, "");
-  s = s.replaceAll(/<\s*\/?\s*(iframe|object|embed|meta|link|style)[^>]*>/gi, "");
-  s = s.replaceAll(/\s+on[a-z-]+\s*=\s*(['"]).*?\1/gi, "");
-  s = s.replaceAll(/\s+on[a-z-]+\s*=\s*[^\s>]+/gi, "");
-  s = s.replaceAll(
-    /\b(href|src|xlink:href|formaction)\s*=\s*(['"]?)\s*(javascript:|vbscript:|data:text\/html)/gi,
-    '$1=$2#$2'
-  );
-  return s;
+  return DOMPurify.sanitize(String(input || ""), domPurifyOptions);
 }
 
 function buildDefenseConfig() {

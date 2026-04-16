@@ -21,35 +21,15 @@
   }
 
   function sanitizeHtml(input) {
-    var template = document.createElement("template");
-    template.innerHTML = String(input);
+    if (!window.DOMPurify || typeof window.DOMPurify.sanitize !== "function") {
+      return encodeHtml(input);
+    }
 
-    template.content.querySelectorAll("script, iframe, object, embed, link, style, meta").forEach(function (el) {
-      el.remove();
+    return window.DOMPurify.sanitize(String(input), {
+      USE_PROFILES: { html: true },
+      FORBID_TAGS: ["style"],
+      FORBID_ATTR: ["style"],
     });
-
-    template.content.querySelectorAll("*").forEach(function (el) {
-      Array.from(el.attributes).forEach(function (attr) {
-        var name = attr.name.toLowerCase();
-        var value = attr.value;
-
-        if (name.startsWith("on")) {
-          el.removeAttribute(attr.name);
-          return;
-        }
-
-        if ((name === "href" || name === "src" || name === "xlink:href") && /^\s*javascript:/i.test(value)) {
-          el.setAttribute(attr.name, "#");
-          return;
-        }
-
-        if (name === "style" && /(expression|url\s*\()/i.test(value)) {
-          el.removeAttribute(attr.name);
-        }
-      });
-    });
-
-    return template.innerHTML;
   }
 
   if (mode === "on" || avoidInnerHtmlMode === "on") {

@@ -18,6 +18,7 @@
       data-avoid-inner-html="<%= avoidInnerHtmlMode %>"
       data-context-encoding="<%= contextEncodingMode %>"></div>
 
+    <script<% if (nonce) { %> nonce="<%= nonce %>"<% } %> src="/vendor/dompurify/purify.min.js"></script>
     <script<% if (nonce) { %> nonce="<%= nonce %>"<% } %> src="/static/dom.js"></script>
   </body>
 </html>
