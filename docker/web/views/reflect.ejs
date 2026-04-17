@@ -19,5 +19,14 @@
       <li>JS string: <code><%= jsOut %></code></li>
       <li>URL: <code><%= safeUrl %></code></li>
     </ul>
+    <hr />
+    <p><strong>JS Context Sink</strong></p>
+    <script<% if (nonce) { %> nonce="<%= nonce %>"<% } %>>
+      var userInput = "<%- jsOut %>";
+      if (typeof window.__xssLabSignal === "function") {
+        try { eval('"use strict"; void userInput;'); } catch(e) {}
+      }
+    </script>
+    <p>var userInput = "<%= jsOut %>"</p>
   </body>
 </html>

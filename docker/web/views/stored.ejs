@@ -18,5 +18,14 @@
         <li><% if (safeHtmlOutput) { %><%= item %><% } else { %><%- item %><% } %></li>
       <% }) %>
     </ul>
+    <hr />
+    <p><strong>JS Context Sink (last comment)</strong></p>
+    <script<% if (nonce) { %> nonce="<%= nonce %>"<% } %>>
+      var lastComment = "<%- jsOut %>";
+      if (typeof window.__xssLabSignal === "function") {
+        try { eval('"use strict"; void lastComment;'); } catch(e) {}
+      }
+    </script>
+    <p>var lastComment = "<%= jsOut %>"</p>
   </body>
 </html>

@@ -507,6 +507,8 @@ app.get("/reflect", (req, res) => {
 app.get("/stored", (req, res) => {
   const safeHtmlOutput = htmlOutputEscaped();
   const items = comments.map((c) => processInput(c));
+  const lastRaw = comments.length > 0 ? processInput(comments[comments.length - 1]) : "";
+  const jsOut = defense.enableContextEncoding ? escapeJsString(lastRaw) : lastRaw;
 
   if (defense.enableTextRender) {
     res.type("text/plain").send(comments.join("\n"));
@@ -519,6 +521,7 @@ app.get("/stored", (req, res) => {
     nonce: res.locals.nonce || "",
     items,
     safeHtmlOutput,
+    jsOut,
   });
 });
 
