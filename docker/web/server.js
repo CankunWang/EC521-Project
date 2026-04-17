@@ -99,10 +99,40 @@ function sanitizeUrl(s) {
 }
 
 function allowlistText(s) {
-  const t = String(s || "");
-  return t
+  const t = String(s || "")
     .replaceAll(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "")
     .replaceAll(/\r\n?/g, "\n");
+
+  // Standard tag-allowlist: only permit safe formatting tags.
+  // Strip every tag that is NOT on the list below.
+  const ALLOWED_TAGS = /^\/?(b|i|em|strong|u|s|p|br|ul|ol|li|a|blockquote|code|pre|h[1-6])$/i;
+
+  // For allowed tags, only permit href (with http/https/mailto) on <a>.
+  // All event-handler attributes (on*) and dangerous attributes are removed.
+  return t.replace(/<\/?([a-zA-Z][a-zA-Z0-9]*)\b([^>]*)?\/?>/g, function (match, tag, attrs) {
+    if (!ALLOWED_TAGS.test(tag)) return "";  // strip disallowed tags entirely
+
+    // For closing tags, return as-is (no attributes)
+    if (match.startsWith("</")) return "</" + tag + ">";
+
+    // Filter attributes: remove all on* handlers, style, class, id, src, etc.
+    // Only keep href on <a> with safe protocols.
+    var safeAttrs = "";
+    if (tag.toLowerCase() === "a" && attrs) {
+      var hrefMatch = attrs.match(/\bhref\s*=\s*(?:"([^"]*)"|'([^']*)'|(\S+))/i);
+      if (hrefMatch) {
+        var href = hrefMatch[1] || hrefMatch[2] || hrefMatch[3] || "";
+        if (/^(https?:\/\/|mailto:)/i.test(href.trim())) {
+          safeAttrs = ' href="' + escapeHtml(href.trim()) + '" rel="noopener noreferrer"';
+        }
+      }
+    }
+
+    // Self-closing br
+    if (tag.toLowerCase() === "br") return "<br>";
+
+    return "<" + tag + safeAttrs + ">";
+  });
 }
 
 function sanitizeHtmlFragment(input) {
